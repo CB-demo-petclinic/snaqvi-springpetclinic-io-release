@@ -25,7 +25,7 @@ jobs:
       - name: Deploy to snaqvi_DEV
         uses: docker://golang:1.20.3-alpine3.17
         shell: sh
-        run: echo "Deploying to snaqvi_DEV"
+        run: echo "Deploying to snaqvi_DEV env"
         kind: deploy
   deploy-to-snaqvi_QA:
     needs:
