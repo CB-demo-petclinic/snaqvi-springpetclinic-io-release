@@ -13,12 +13,15 @@ metadata:
     - name: snaqvi_DEV
       jobs:
         - deploy-to-snaqvi_DEV
+        - Exit-Gate
     - name: snaqvi_QA
       jobs:
         - deploy-to-snaqvi_QA
+        - Create-SNOW-Ticket
     - name: snaqvi_PROD
       jobs:
         - deploy-to-snaqvi_PROD
+        - Wait-For-CR-Approval
 jobs:
   deploy-to-snaqvi_DEV:
     steps:
@@ -28,8 +31,7 @@ jobs:
         run: echo "Deploying to snaqvi_DEV env"
         kind: deploy
   deploy-to-snaqvi_QA:
-    needs:
-      - deploy-to-snaqvi_DEV
+    needs: Exit-Gate
     steps:
       - name: Deploy to snaqvi_QA
         uses: docker://golang:1.20.3-alpine3.17
@@ -37,11 +39,36 @@ jobs:
         run: echo "Deploying to snaqvi_QA"
         kind: deploy
   deploy-to-snaqvi_PROD:
-    needs:
-      - deploy-to-snaqvi_QA
+    needs: Create-SNOW-Ticket
     steps:
       - name: Deploy to snaqvi_PROD
         uses: docker://golang:1.20.3-alpine3.17
         shell: sh
         run: echo "Deploying to snaqvi_PROD"
         kind: deploy
+  Exit-Gate:
+    needs: deploy-to-snaqvi_DEV
+    timeout-minutes: 4320
+    with:
+      instructions: ""
+      disallowLaunchByUser: false
+      approvers: ""
+      notifyAllEligibleUsers: false
+    delegates: cloudbees-io/manual-approval/custom-job.yml@v1
+  Create-SNOW-Ticket:
+    needs: deploy-to-snaqvi_QA
+    timeout-minutes: 4320
+    with:
+      instructions: ""
+      disallowLaunchByUser: false
+      approvers: ""
+      notifyAllEligibleUsers: false
+    delegates: cloudbees-io/manual-approval/custom-job.yml@v1
+  Wait-For-CR-Approval:
+    timeout-minutes: 4320
+    with:
+      instructions: ""
+      disallowLaunchByUser: false
+      approvers: ""
+      notifyAllEligibleUsers: false
+    delegates: cloudbees-io/manual-approval/custom-job.yml@v1
